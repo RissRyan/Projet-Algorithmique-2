@@ -7,8 +7,6 @@ data = pd.read_csv('data/golf.csv')
 #print(data)
 
 
-
-
 class Node:
     label = ""
     branches = []
@@ -18,6 +16,9 @@ class Node:
 
     def addBranches(self, child):
         self.branches.append(child)
+
+    def getLabel(self):
+        return self.label
 
 
 def isAllEqual(df):
@@ -47,21 +48,18 @@ def entropy(df, label):
         res -= p*log2(p)
     return res
 
-def informationGain(df, label):
-    totalRow = df[label].size
-    classes = allValuesAttrib(df, label)
-    L = df[label].tolist()
+def informationGain(feature, label):
+    totalRow = data[label].size
+    classes = allValuesAttrib(data, feature)
+    L = data[feature].tolist()
     res = 0
     for l in classes:
         p = L.count(l)/totalRow
-        res += p*entropy(df[df[label] == l], "play")
+        res += p*entropy(data[data[feature] == l], "play")
     return res
 
     
 wholeEntropy = entropy(data, "play")
-outlookIG = informationGain(data, "outlook")
-I = wholeEntropy - outlookIG
-print(I)
 
 
 def ID3(exemples, attributCible, attributsNonCibles):
@@ -70,24 +68,33 @@ def ID3(exemples, attributCible, attributsNonCibles):
     elif(attributsNonCibles == []): #Si il n'y a aucun attribut non cibles, alors notre arbre sera seulement 
                                     #un noeud ettiqueté avec la classe la plus fréquente
         return Node("Valeur la plus fréquente pour l'attribut cible")
-    elif(isAllEqual(data[[attributCible]])): # S'il y a qu'une seule classe, alors on a un arbre feuille
-        return Node(data[[attributCible]].values[0])
+    elif(isAllEqual(exemples[[attributCible]])): # S'il y a qu'une seule classe, alors on a un arbre feuille
+        return Node(exemples[[attributCible]].values[0])
     else:
-       attributSelectionne = "a" # On selectionne le "meilleur" attribut
-       attributsNonCibles.remove(attributSelectionne) # On le retire de la liste
-       newNode = Node(attributSelectionne)
+        attributSelectionne = "a" # On selectionne le "meilleur" attribut
+        max = 0
+        for attrib in attributsNonCibles:
+            I = wholeEntropy - informationGain(attrib, attributCible)
+            if I > max:
+                max = I
+                attributSelectionne = attrib
+
+        print(attributSelectionne)
+
+        attributsNonCibles.remove(attributSelectionne) # On le retire de la liste
+        newNode = Node(attributSelectionne)
        
 
-       for v in allValuesAttrib(exemples, attributSelectionne):
-            filteredExamples = exemples[exemples[attributSelectionne] == v]
-            nextNode = ID3(filteredExamples, attributCible, attributsNonCibles)
-            print([v, nextNode])
-            newNode.addBranches([v, nextNode])
-       
-       return newNode
+        for v in allValuesAttrib(exemples, attributSelectionne):
+                filteredExamples = exemples[exemples[attributSelectionne] == v]
+                print("L'attribut " + str(v))
+                nextNode = ID3(filteredExamples, attributCible, attributsNonCibles)
+                label = nextNode.getLabel()
+                print("L'attribut " + str(v)  + " a pour fils : " + label)
+                newNode.addBranches([str(v), nextNode])
+        
+        return newNode
 
-#ID3(data, "play", ["outlook", "temp", "humidity", "wind"])
-a = data[data["outlook"] == "overcast"]
-print(isAllEqual(a[["outlook"]]))
+ID3(data, "play", ["outlook", "temp", "humidity", "wind"])
     
 
