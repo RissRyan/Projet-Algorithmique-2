@@ -8,17 +8,23 @@ data = pd.read_csv('data/golf.csv')
 
 
 class Node:
-    label = ""
-    branches = []
-    
+
     def __init__(self, label):
         self.label = label
+        self.branches = []
 
     def addBranches(self, child):
         self.branches.append(child)
 
     def getLabel(self):
         return self.label
+
+    def printTree(self):
+        print(self.label)
+        for b in self.branches:
+            print("L'attribut " + b[0] + " a pour fils : " + b[1].getLabel())
+            b[1].printTree()
+
 
 
 def isAllEqual(df):
@@ -79,22 +85,14 @@ def ID3(exemples, attributCible, attributsNonCibles):
                 max = I
                 attributSelectionne = attrib
 
-        print(attributSelectionne)
-
         attributsNonCibles.remove(attributSelectionne) # On le retire de la liste
         newNode = Node(attributSelectionne)
-       
 
         for v in allValuesAttrib(exemples, attributSelectionne):
-                filteredExamples = exemples[exemples[attributSelectionne] == v]
-                print("L'attribut " + str(v))
-                nextNode = ID3(filteredExamples, attributCible, attributsNonCibles)
-                label = nextNode.getLabel()
-                print("L'attribut " + str(v)  + " a pour fils : " + label)
-                newNode.addBranches([str(v), nextNode])
-        
+            filteredExamples = exemples[exemples[attributSelectionne] == v]
+            nextNode = ID3(filteredExamples, attributCible, attributsNonCibles)
+            newNode.addBranches([str(v), nextNode])
+
         return newNode
 
-ID3(data, "play", ["outlook", "temp", "humidity", "wind"])
-    
-
+ID3(data, "play", ["outlook", "temp", "humidity", "wind"]).printTree()
